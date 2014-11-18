@@ -1,0 +1,5 @@
+Home: http://www.perry.ch/wp/
+RSS: http://www.perry.ch/wp/feed/
+Category: http://www.perry.ch/wp/category/bas-valais/
+Subcategory: http://www.perry.ch/wp/category/bas-valais/val-de-bagnes/
+Article: http://www.perry.ch/wp/gspon-gebidumpass-gspon/
