@@ -79,8 +79,12 @@ public class Main {
                 Date gmtDate = dateFormat.parse(article.getPubDateGmt());
                 TimeZone tz = timeZone(localDate, gmtDate);
                 String fileName = formatter.format(localDate)
-                        + "_" + article.getName() + ".xml";
-                File file = new File(outputDir, fileName);
+                        + "_" + article.getName();
+                File dir = new File(outputDir, fileName);
+                if (!dir.mkdirs()) {
+                    throw new IOException("Could not create directory " + dir);
+                }
+                File file = new File("folder-meta.xml");
                 try (OutputStream stream = new FileOutputStream(file);
                         Writer writer = new OutputStreamWriter(stream, "UTF-8");
                         PrintWriter out = new PrintWriter(writer);
@@ -110,13 +114,33 @@ public class Main {
                     }
                     xml.startTag("content");
                     xml.attribute("type", "text/html");
-                    xml.cdata(article.getContent());
+                    xml.cdata(cleanupBody(article.getContent()));
                     xml.endTag();
                     xml.endTag();
                 }
             } catch (IOException | ParseException ex) {
                 LOG.log(Level.SEVERE, null, ex);
             }
+        }
+
+        private String cleanupBody(String content) {
+            final String captionStart = "[caption";
+            final String captionEnd = "[/caption]";
+            StringBuilder builder = new StringBuilder();
+            int start = 0;
+            while (true) {
+                int ix = content.indexOf(captionStart, start);
+                if (ix < 0) {
+                    break;
+                }
+                builder.append(content, start, ix);
+                ix = content.indexOf(captionEnd, ix);
+                if (ix < 0) {
+                    break;
+                }
+                start = ix + captionEnd.length();
+            }
+            return builder.toString();
         }
 
         @Override
