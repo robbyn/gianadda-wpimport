@@ -105,12 +105,12 @@ public class Main {
                     if (article.getSummary() != null) {
                         xml.startTag("content");
                         xml.attribute("type", "text/plain");
-                        xml.data(article.getContent());
+                        xml.cdata(article.getContent());
                         xml.endTag();
                     }
                     xml.startTag("content");
                     xml.attribute("type", "text/html");
-                    xml.data(article.getContent());
+                    xml.cdata(article.getContent());
                     xml.endTag();
                     xml.endTag();
                 }

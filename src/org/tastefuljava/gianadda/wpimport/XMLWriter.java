@@ -89,6 +89,18 @@ public class XMLWriter implements Closeable {
         printEscaped(data);
     }
 
+    public void cdata(String data) {
+        if (inAttributes) {
+            out.print('>');
+            inAttributes = false;
+        }
+        out.println("<![CDATA[");
+        out.println(data);
+        indent();
+        out.print("]]>");
+        lnBefore = false;
+    }
+
     public void endTag() {
         String name = tagStack.remove(tagStack.size()-1);
         if (inAttributes) {
