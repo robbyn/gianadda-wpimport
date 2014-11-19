@@ -84,7 +84,7 @@ public class Main {
                 if (!dir.mkdirs()) {
                     throw new IOException("Could not create directory " + dir);
                 }
-                File file = new File("folder-meta.xml");
+                File file = new File(dir, "folder-meta.xml");
                 try (OutputStream stream = new FileOutputStream(file);
                         Writer writer = new OutputStreamWriter(stream, "UTF-8");
                         PrintWriter out = new PrintWriter(writer);
@@ -139,6 +139,9 @@ public class Main {
                     break;
                 }
                 start = ix + captionEnd.length();
+            }
+            if (start < content.length()) {
+                buf.append(content.substring(start));
             }
             return builder.toString();
         }
