@@ -78,9 +78,15 @@ public class Main {
                 Date localDate = dateFormat.parse(article.getPubDate());
                 Date gmtDate = dateFormat.parse(article.getPubDateGmt());
                 TimeZone tz = timeZone(localDate, gmtDate);
-                String fileName = formatter.format(localDate)
-                        + "_" + article.getName();
+                String fileName = formatter.format(localDate);
                 File dir = new File(outputDir, fileName);
+                if (dir.isDirectory()) {
+                    char c = 'a';
+                    do {
+                        dir = new File(outputDir, fileName + c);
+                        ++c;
+                    } while (dir.isDirectory());
+                }
                 if (!dir.mkdirs()) {
                     throw new IOException("Could not create directory " + dir);
                 }
@@ -114,7 +120,10 @@ public class Main {
                     }
                     xml.startTag("content");
                     xml.attribute("type", "text/html");
-                    xml.cdata(cleanupBody(article.getContent()));
+                    String body = article.getContent();
+                    body = cleanup(body, "[caption", "[/caption]");
+                    body = cleanup(body, "<iframe", "</iframe>");
+                    xml.cdata(body);
                     xml.endTag();
                     xml.endTag();
                 }
@@ -123,22 +132,21 @@ public class Main {
             }
         }
 
-        private String cleanupBody(String content) {
-            final String captionStart = "[caption";
-            final String captionEnd = "[/caption]";
+        private String cleanup(String content, String tagStart,
+                String tagEnd) {
             StringBuilder builder = new StringBuilder();
             int start = 0;
             while (true) {
-                int ix = content.indexOf(captionStart, start);
+                int ix = content.indexOf(tagStart, start);
                 if (ix < 0) {
                     break;
                 }
                 builder.append(content, start, ix);
-                ix = content.indexOf(captionEnd, ix);
+                ix = content.indexOf(tagEnd, ix);
                 if (ix < 0) {
                     break;
                 }
-                start = ix + captionEnd.length();
+                start = ix + tagEnd.length();
             }
             if (start < content.length()) {
                 buf.append(content.substring(start));
