@@ -20,6 +20,7 @@ public class ContentProcessor {
         return body;
     }
 
+    // remove averyzhing between tagStart and tagEnf
     private String cleanup(String content, String tagStart,
             String tagEnd) {
         StringBuilder buf = new StringBuilder();
@@ -42,6 +43,7 @@ public class ContentProcessor {
         return buf.toString();
     }
 
+    // convert paragraphs separated by a blank line into <p></p> paragraphes
     private String splitParas(String body) throws IOException {
         StringBuilder buf = new StringBuilder();
         try (Reader reader = new StringReader(body);
