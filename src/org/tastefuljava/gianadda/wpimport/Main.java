@@ -64,7 +64,7 @@ public class Main {
         private final File outputDir;
         private Article article;
         private boolean keepArticle = false;
-        private String baseLink;
+        private ContentProcessor processor;
 
         public ParserHandler(File outputDir) {
             this.outputDir = outputDir;
@@ -113,45 +113,21 @@ public class Main {
                         xml.endTag();
                     }
                     if (article.getSummary() != null) {
-                        xml.startTag("content");
+                        xml.startTag("summary");
                         xml.attribute("type", "text/plain");
-                        xml.cdata(article.getContent());
+                        xml.cdata(article.getSummary());
                         xml.endTag();
                     }
                     xml.startTag("content");
                     xml.attribute("type", "text/html");
                     String body = article.getContent();
-                    body = cleanup(body, "[caption", "[/caption]");
-                    body = cleanup(body, "<iframe", "</iframe>");
-                    xml.cdata(body);
+                    xml.cdata(processor.process(body));
                     xml.endTag();
                     xml.endTag();
                 }
             } catch (IOException | ParseException ex) {
                 LOG.log(Level.SEVERE, null, ex);
             }
-        }
-
-        private String cleanup(String content, String tagStart,
-                String tagEnd) {
-            StringBuilder builder = new StringBuilder();
-            int start = 0;
-            while (true) {
-                int ix = content.indexOf(tagStart, start);
-                if (ix < 0) {
-                    break;
-                }
-                builder.append(content, start, ix);
-                ix = content.indexOf(tagEnd, ix);
-                if (ix < 0) {
-                    break;
-                }
-                start = ix + tagEnd.length();
-            }
-            if (start < content.length()) {
-                buf.append(content.substring(start));
-            }
-            return builder.toString();
         }
 
         @Override
@@ -192,6 +168,7 @@ public class Main {
             switch (qName) {
                 case "item":
                     article = new Article();
+                    keepArticle = false;
                     break;
             }
         }
@@ -212,20 +189,18 @@ public class Main {
                             if (!link.endsWith("/")) {
                                 link += "/";
                             }
-                            baseLink = link;
-                        } else if (baseLink != null && link.startsWith(baseLink)) {
-                            if (link.endsWith("/")) {
-                                link = link.substring(0, link.length()-1);
-                            }
-                            int ix = link.lastIndexOf('/');
-                            article.setName(link.substring(ix+1));
+                            processor = new ContentProcessor(link);
                         }
                     }
                     break;
-                case "guid":
+                case "wp:post_type":
                     if (article != null) {
-                        String guid = buf.toString().trim();
-                        keepArticle = guid.matches(".*\\?p=[0-9]+$");
+                        keepArticle = buf.toString().trim().equals("post");
+                    }
+                    break;
+                case "wp:post_name":
+                    if (article != null) {
+                        article.setName(buf.toString().trim());
                     }
                     break;
                 case "title":
