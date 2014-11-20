@@ -11,6 +11,8 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,6 +48,7 @@ public class Main {
             SAXParser parser = factory.newSAXParser();
             ParserHandler handler = new ParserHandler(outputDir);
             parser.parse(file, handler);
+            handler.writeAllArticles();
         } catch (SAXException | ParserConfigurationException e) {
             LOG.log(Level.SEVERE, "Error reading project", e);
             throw new IOException(e.getMessage());
@@ -65,12 +68,19 @@ public class Main {
         private Article article;
         private boolean keepArticle = false;
         private ContentProcessor processor;
+        private Map<String,Article> articles = new HashMap<>();
 
         public ParserHandler(File outputDir) {
             this.outputDir = outputDir;
             TimeZone gmt = TimeZone.getTimeZone("GMT");
             dateFormat.setTimeZone(gmt);
             formatter.setTimeZone(gmt);
+        }
+
+        public void writeAllArticles() {
+            for (Article art: articles.values()) {
+                writeArticle(art);
+            }
         }
 
         private void writeArticle(Article article) {
@@ -179,7 +189,7 @@ public class Main {
             switch (qName) {
                 case "item":
                     if (keepArticle && article != null) {
-                        writeArticle(article);
+                        articles.put(article.getName(), article);
                     }
                     article = null;
                     break;
